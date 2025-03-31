@@ -34,3 +34,8 @@ app.get("/", async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+
+ // "dev": "nodemon --ext ts --exec ts-node src/server.ts",
+    // "build": "tsc",
+    // "start": "node dist/server.js"
