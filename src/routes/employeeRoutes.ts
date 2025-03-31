@@ -8,7 +8,7 @@ const router: Router = express.Router();
 // @ts-ignore
 router.post("/", async (req: Request, res: Response) => {
     try {
-        const { name, dateOfBirth, gender, email, address } = req.body;
+        const { email } = req.body;
         const existingEmployee = await Employee.findOne({ email });
         if (existingEmployee) {
             return res.status(400).json({ error: "Email already exists" });
@@ -25,8 +25,19 @@ router.post("/", async (req: Request, res: Response) => {
 // Lấy danh sách nhân viên
 router.get("/", async (req: Request, res: Response) => {
     try {
-        const employees = await Employee.find();
-        res.json(employees);
+        const page = parseInt(req.query.page as string) || 1; // Default page = 1
+        const limit = parseInt(req.query.limit as string) || 10; // Default limit = 10
+        const skip = (page - 1) * limit; // Calculate how many records to skip
+        const totalEmployees = await Employee.countDocuments(); // Get total number of employees
+        const employees = await Employee.find().skip(skip).limit(limit); // Fetch paginated employees
+
+        res.json({
+            total: totalEmployees,
+            page,
+            limit,
+            totalPages: Math.ceil(totalEmployees / limit),
+            data: employees,
+        });
     } catch (error) {
         res.status(500).json({ error: "Error fetching employees" });
     }
@@ -73,7 +84,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
         const deletedEmployee = await Employee.findByIdAndDelete(req.params.id);
         if (!deletedEmployee) return res.status(404).json({ error: "Employee not found" });
 
-        res.json({ message: "Employee deleted successfully" });
+        res.json({ message: "Employee deleted successfully", _id: req.params.id });
     } catch (error) {
         res.status(500).json({ error: "Error deleting employee" });
     }
